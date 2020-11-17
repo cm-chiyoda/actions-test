@@ -20,6 +20,9 @@ jobs:
       - name: Build an image from Dockerfile
         run: docker build -t dd-agent:${{ github.sha }} datadog-agent/
 
+      - name: debug1
+        run: ls -alh
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -28,6 +31,9 @@ jobs:
           output: "vulnerability_comments.txt"
           ignore-unfixed: false
           severity: "CRITICAL,HIGH"
+
+      - name: debug2
+        run: ls -alh
 
       - name: Set vulnerability_comments
         id: set_comments
