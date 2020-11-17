@@ -27,7 +27,8 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "dd-agent:${{ github.sha }}"
-          format: "table"
+          format: "template"
+          template: "@/contrib/gitlab.tpl"
           output: "vulnerability_comments.txt"
           ignore-unfixed: false
           severity: "CRITICAL,HIGH"
