@@ -19,17 +19,33 @@ jobs:
         run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//_/g')" >> $GITHUB_ENV
 
       - name: Build an image from Dockerfile
-        run: |
-          docker build -t dd-agent:${{ github.sha }} datadog-agent/
+        run: docker build -t dd-agent:${{ github.sha }} datadog-agent/
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "dd-agent:${{ github.sha }}"
           format: "table"
-          exit-code: "1"
-          ignore-unfixed: true
-          severity: "CRITICAL"
+          output: "vulnerability_comments.txt"
+          ignore-unfixed: false
+          severity: "CRITICAL, HIGH"
+
+      - name: Set vulnerability_comments
+        id: set_comments
+        run: echo ::set-output name=VULNERABILITY_COMMENTS::$(cat vulnerability_comments.txt)
+
+      - uses: actions/github-script@v3
+        env:
+          VULNERABILITY_COMMENTS: ${{ steps.set_comments.outputs.VULNERABILITY_COMMENTS }}
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: process.env.VULNERABILITY_COMMENTS
+            })
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
       #   with:
