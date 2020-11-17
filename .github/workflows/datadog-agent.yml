@@ -38,10 +38,11 @@ jobs:
         env:
           VULNERABILITY_COMMENTS: ${{ steps.set_comments.outputs.VULNERABILITY_COMMENTS }}
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          pull_request_number: ${{ github.event.pull_request.number }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             github.issues.createComment({
-              issue_number: context.pull_request.number,
+              issue_number: ,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: process.env.VULNERABILITY_COMMENTS
