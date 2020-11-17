@@ -27,8 +27,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "dd-agent:${{ github.sha }}"
-          format: "template"
-          template: "@/contrib/gitlab.tpl"
+          format: "json"
           output: "vulnerability_comments.txt"
           ignore-unfixed: false
           severity: "CRITICAL,HIGH"
@@ -37,13 +36,11 @@ jobs:
         run: ls -alh
 
       - name: Set vulnerability_comments
-        id: set_comments
-        run: echo ::set-output name=VULNERABILITY_COMMENTS::$(cat vulnerability_comments.txt)
-
+        run: |
+          echo "VULNERABILITY_COMMENTS=\"$(cat vulnerability_comments.txt)\"" >> $GITHUB_ENV
       - uses: actions/github-script@v3
         env:
           PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
-          VULNERABILITY_COMMENTS: ${{ steps.set_comments.outputs.VULNERABILITY_COMMENTS }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -51,7 +48,11 @@ jobs:
               issue_number: process.env.PULL_REQUEST_NUMBER,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: process.env.VULNERABILITY_COMMENTS
+              body: `\
+              ### Trivy vulnerability scanner
+              \`\`\`json\
+              ${process.env.VULNERABILITY_COMMENTS}\
+              \`\`\``
             })
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
