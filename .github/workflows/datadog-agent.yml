@@ -21,6 +21,7 @@ jobs:
         run: docker build -t dd-agent:${{ github.sha }} datadog-agent/
 
       - name: Run Trivy vulnerability scanner
+        id: trivy
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "dd-agent:${{ github.sha }}"
@@ -29,6 +30,8 @@ jobs:
           severity: "CRITICAL,HIGH"
 
       - uses: actions/github-script@v3
+        env:
+          OUTPUT: "```${{ steps.trivy.outputs.stdout }}```"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -36,7 +39,7 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: "test message"
+              body: "#### `Trivy vulnerability scan`\n" + process.env.OUTPUT
             })
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
