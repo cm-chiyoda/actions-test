@@ -1,8 +1,7 @@
 name: datadog-agent
 on:
   pull_request:
-    branches-ignore:
-      - main
+    types: [opened, synchronize]
     paths:
       - ".github/workflows/datadog-agent.yml"
       - "datadog-agent/*"
