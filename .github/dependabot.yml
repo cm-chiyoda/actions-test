@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: "docker"
+    directory: "/datadog-agent/"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    assignees:
+      - "cm-chiyoda"
+  - package-ecosystem: "docker"
+    directory: "/python/"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    assignees:
+      - "cm-chiyoda"
