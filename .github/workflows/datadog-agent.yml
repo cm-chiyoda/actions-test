@@ -20,9 +20,6 @@ jobs:
       - name: Build an image from Dockerfile
         run: docker build -t dd-agent:${{ github.sha }} datadog-agent/
 
-      - name: debug1
-        run: ls -alh
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -31,9 +28,6 @@ jobs:
           output: "vulnerability_comments.txt"
           ignore-unfixed: false
           severity: "CRITICAL,HIGH"
-
-      - name: debug2
-        run: ls -alh
 
       - name: Set vulnerability_comments
         run: |
@@ -44,15 +38,15 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const message = `### Trivy vulnerability scanner\
+            \`\`\`json\
+            ${process.env.VULNERABILITY_COMMENTS}\
+            \`\`\``
             github.issues.createComment({
               issue_number: process.env.PULL_REQUEST_NUMBER,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `\
-              ### Trivy vulnerability scanner
-              \`\`\`json\
-              ${process.env.VULNERABILITY_COMMENTS}\
-              \`\`\``
+              body: message
             })
       # - name: Configure AWS Credentials
       #   uses: aws-actions/configure-aws-credentials@v1
