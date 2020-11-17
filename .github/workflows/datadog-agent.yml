@@ -28,7 +28,7 @@ jobs:
           format: "table"
           output: "vulnerability_comments.txt"
           ignore-unfixed: false
-          severity: "CRITICAL, HIGH"
+          severity: "CRITICAL,HIGH"
 
       - name: Set vulnerability_comments
         id: set_comments
@@ -41,7 +41,7 @@ jobs:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             github.issues.createComment({
-              issue_number: context.issue.number,
+              issue_number: context.pull_request.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: process.env.VULNERABILITY_COMMENTS
