@@ -29,18 +29,17 @@ jobs:
           ignore-unfixed: false
           severity: "CRITICAL,HIGH"
 
-      - name: Set vulnerability_comments
-        run: |
-          echo "VULNERABILITY_COMMENTS=\"$(cat vulnerability_comments.txt)\"" >> $GITHUB_ENV
       - uses: actions/github-script@v3
         env:
           PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const fs = require('fs');
+            const data = fs.readFileSync('vulnerability_comments.txt', 'utf8')
             const message = `### Trivy vulnerability scanner\
             \`\`\`json\
-            ${process.env.VULNERABILITY_COMMENTS}\
+            ${data}\
             \`\`\``
             github.issues.createComment({
               issue_number: process.env.PULL_REQUEST_NUMBER,
