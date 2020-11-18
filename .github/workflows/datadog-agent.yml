@@ -37,7 +37,7 @@ jobs:
         run: docker build -t dd-agent:ci-image datadog-agent/
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@2b5de510862c22b735aa586acbafe850cfe75148
         with:
           image-ref: "dd-agent:ci-image"
           format: "table"
