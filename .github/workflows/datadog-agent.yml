@@ -21,6 +21,7 @@ jobs:
 
       - name: Extract branch name and commit hash for push
         shell: bash
+        if: github.event_name == 'push'
         run: |
           echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//_/g')" >> $GITHUB_ENV
           echo "COMMIT_HASH=${{ github.sha }}" >> $GITHUB_ENV
@@ -68,7 +69,7 @@ jobs:
           docker tag dd-agent:${COMMIT_HASH} $ECR_REGISTRY/$ECR_REPOSITORY:${BRANCH_NAME}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY
 
-      - name: Push image to Amazon ECR (latest and master)
+      - name: Push image to Amazon ECR (latest)
         if: github.event_name == 'push'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
