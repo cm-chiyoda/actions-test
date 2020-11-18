@@ -12,31 +12,35 @@ on:
       - ".github/workflows/datadog-agent.yml"
       - "datadog-agent/*"
 jobs:
-  build:
-    name: Build
+  build-push:
+    name: Build-Push
     runs-on: ubuntu-18.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Extract branch name
-        if: github.event_name == 'push'
+      - name: Extract branch name and commit hash for push
         shell: bash
-        run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//_/g')" >> $GITHUB_ENV
+        run: |
+          echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//_/g')" >> $GITHUB_ENV
+          echo "COMMIT_HASH=${{ github.sha }}" >> $GITHUB_ENV
 
-      - name: Extract branch name
+      - name: Extract branch name and commit hash for pr
         if: github.event_name == 'pull_request'
         shell: bash
-        run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | sed 's/\//_/g')" >> $GITHUB_ENV
+        run: |
+          echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | sed 's/\//_/g')" >> $GITHUB_ENV
+          echo "COMMIT_HASH=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
 
       - name: Build an image from Dockerfile
-        run: docker build -t dd-agent:${{ github.sha }} datadog-agent/
+        run: docker build -t dd-agent:${COMMIT_HASH} datadog-agent/
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "dd-agent:${{ github.sha }}"
+          image-ref: "dd-agent:${COMMIT_HASH}"
           format: "table"
+          exit-code: 1
           ignore-unfixed: false
           severity: "CRITICAL,HIGH"
 
@@ -49,7 +53,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           role-external-id: ${{ secrets.AWS_ROLE_EXTERNAL_ID }}
           role-duration-seconds: 1200
-          role-session-name: github-action-session
+          role-session-name: github-actions-image-release-session
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -60,15 +64,15 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPO_NAME }}
         run: |
-          docker tag dd-agent:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
-          docker tag dd-agent:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:${BRANCH_NAME}
+          docker tag dd-agent:${COMMIT_HASH} $ECR_REGISTRY/$ECR_REPOSITORY:${COMMIT_HASH}
+          docker tag dd-agent:${COMMIT_HASH} $ECR_REGISTRY/$ECR_REPOSITORY:${BRANCH_NAME}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY
 
-      - name: Push image to Amazon ECR (latest)
-        if: github.event_name != 'pull_request'
+      - name: Push image to Amazon ECR (latest and master)
+        if: github.event_name == 'push'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPO_NAME }}
         run: |
-          docker tag dd-agent:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker tag dd-agent:${COMMIT_HASH} $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY
