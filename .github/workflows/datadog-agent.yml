@@ -34,12 +34,12 @@ jobs:
           echo "COMMIT_HASH=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
 
       - name: Build an image from Dockerfile
-        run: docker build -t dd-agent:ci-image datadog-agent/
+        run: docker build -t datadog-agent:ci-image datadog-agent/
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@2b5de510862c22b735aa586acbafe850cfe75148
         with:
-          image-ref: "dd-agent:ci-image"
+          image-ref: "datadog-agent:ci-image"
           format: "table"
           exit-code: 1
           ignore-unfixed: false
@@ -65,9 +65,9 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPO_NAME }}
         run: |
-          docker tag dd-agent:ci-image $ECR_REGISTRY/$ECR_REPOSITORY:${COMMIT_HASH}
-          docker tag dd-agent:ci-image $ECR_REGISTRY/$ECR_REPOSITORY:${BRANCH_NAME}
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY
+          docker tag datadog-agent:ci-image ${ECR_REGISTRY}/${ECR_REPOSITORY}:${COMMIT_HASH}
+          docker tag datadog-agent:ci-image ${ECR_REGISTRY}/${ECR_REPOSITORY}:${BRANCH_NAME}
+          docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}
 
       - name: Push image to Amazon ECR (latest)
         if: github.event_name == 'push'
@@ -75,5 +75,5 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPO_NAME }}
         run: |
-          docker tag dd-agent:ci-image $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY
+          docker tag datadog-agent:ci-image ${ECR_REGISTRY}/${ECR_REPOSITORY}:latest
+          docker push ${ECR_REGISTRY}/${ECR_REPOSITORY}
