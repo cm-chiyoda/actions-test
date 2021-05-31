@@ -23,7 +23,7 @@ jobs:
           docker build -t python:${{ github.sha }} python/
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@ac8de07fd168680dd0331bef43681c0e150e9ad1
         with:
           image-ref: "python:${{ github.sha }}"
           format: "table"
